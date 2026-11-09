@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "test": "playwright test",
+    "test:evals": "playwright test --project=evals"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "@playwright/test": "^1.65.0",
     "@types/better-sqlite3": "^9.6.0",

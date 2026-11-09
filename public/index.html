@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer onboarding</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #1d2330;
+      --muted: #5b6475;
+      --border: #d5d9e0;
+      --accent: #2f5bea;
+      --error: #b42318;
+      --low-bg: #e6f4ea;   --low-fg: #1e6b34;
+      --med-bg: #fff4d6;   --med-fg: #8a5a00;
+      --high-bg: #fde7e7;  --high-fg: #a11d1d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 32px 16px;
+    }
+    h1 { font-size: 1.6rem; margin: 0 0 20px; }
+    h2 { font-size: 1.1rem; margin: 0 0 12px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-weight: 600; margin-bottom: 4px; }
+    .field input[type="text"],
+    .field input[type="email"],
+    .field input[type="date"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font: inherit;
+    }
+    .field input[aria-invalid="true"] { border-color: var(--error); }
+    .field.checkbox { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .field.checkbox label { display: inline; margin: 0; font-weight: 600; }
+    .field.checkbox input { width: 18px; height: 18px; margin: 0; }
+    .field.checkbox .error { flex-basis: 100%; }
+    .error { color: var(--error); font-size: 0.875rem; margin-top: 4px; }
+    .error:empty { display: none; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 18px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: progress; }
+    .hint { color: var(--muted); font-size: 0.875rem; font-weight: 400; }
+    #customer-id { font-weight: 600; margin: 0 0 12px; }
+    .risk-row { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; }
+    .badge {
+      display: inline-block;
+      padding: 2px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 0.85rem;
+    }
+    .badge[data-risk="low"]    { background: var(--low-bg);  color: var(--low-fg); }
+    .badge[data-risk="medium"] { background: var(--med-bg);  color: var(--med-fg); }
+    .badge[data-risk="high"]   { background: var(--high-bg); color: var(--high-fg); }
+    #reasons { margin: 0; padding-left: 20px; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Customer onboarding</h1>
+
+    <form id="onboarding-form" class="card" novalidate>
+      <div class="field">
+        <label for="fullName">Full name</label>
+        <input id="fullName" name="fullName" type="text" autocomplete="name" aria-describedby="fullName-error">
+        <div id="fullName-error" class="error" data-error-for="fullName"></div>
+      </div>
+
+      <div class="field">
+        <label for="dateOfBirth">Date of birth</label>
+        <input id="dateOfBirth" name="dateOfBirth" type="date" aria-describedby="dateOfBirth-error">
+        <div id="dateOfBirth-error" class="error" data-error-for="dateOfBirth"></div>
+      </div>
+
+      <div class="field">
+        <label for="country">Country <span class="hint">(ISO-2, e.g. DK)</span></label>
+        <input id="country" name="country" type="text" maxlength="3" autocomplete="country" aria-describedby="country-error">
+        <div id="country-error" class="error" data-error-for="country"></div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" aria-describedby="email-error">
+        <div id="email-error" class="error" data-error-for="email"></div>
+      </div>
+
+      <div class="field checkbox">
+        <input id="isPep" name="isPep" type="checkbox" aria-describedby="isPep-error">
+        <label for="isPep">Politically exposed person</label>
+        <div id="isPep-error" class="error" data-error-for="isPep"></div>
+      </div>
+
+      <div id="form-error" class="error" role="alert"></div>
+
+      <button type="submit" id="submit-btn">Submit</button>
+    </form>
+
+    <section id="result" class="card" hidden aria-labelledby="result-heading">
+      <h2 id="result-heading">Result</h2>
+      <p id="customer-id"></p>
+      <button type="button" id="screen-btn">Run screening</button>
+      <div id="screen-error" class="error" role="alert"></div>
+
+      <div id="screening" hidden>
+        <div class="risk-row">
+          <span>Risk:</span>
+          <span id="risk-badge" class="badge" role="status" aria-live="polite"></span>
+        </div>
+        <ul id="reasons" aria-label="Reasons"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const form = document.getElementById('onboarding-form');
+      const submitBtn = document.getElementById('submit-btn');
+      const formError = document.getElementById('form-error');
+      const result = document.getElementById('result');
+      const customerIdEl = document.getElementById('customer-id');
+      const screenBtn = document.getElementById('screen-btn');
+      const screenError = document.getElementById('screen-error');
+      const screening = document.getElementById('screening');
+      const badge = document.getElementById('risk-badge');
+      const reasonsList = document.getElementById('reasons');
+
+      let customerId = null;
+
+      function clearErrors() {
+        formError.textContent = '';
+        form.querySelectorAll('[data-error-for]').forEach(function (el) {
+          el.textContent = '';
+          const input = document.getElementById(el.dataset.errorFor);
+          if (input) input.removeAttribute('aria-invalid');
+        });
+      }
+
+      function showFieldErrors(errors) {
+        let unmatched = [];
+        Object.keys(errors || {}).forEach(function (field) {
+          const messages = [].concat(errors[field]).join(' ');
+          const el = form.querySelector('[data-error-for="' + CSS.escape(field) + '"]');
+          if (el) {
+            el.textContent = messages;
+            const input = document.getElementById(field);
+            if (input) input.setAttribute('aria-invalid', 'true');
+          } else {
+            unmatched.push(messages);
+          }
+        });
+        if (unmatched.length) formError.textContent = unmatched.join(' ');
+      }
+
+      function resetResult() {
+        customerId = null;
+        result.hidden = true;
+        customerIdEl.textContent = '';
+        screenError.textContent = '';
+        screening.hidden = true;
+        badge.textContent = '';
+        badge.removeAttribute('data-risk');
+        reasonsList.replaceChildren();
+      }
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        clearErrors();
+        resetResult();
+
+        const payload = {
+          fullName: form.fullName.value,
+          dateOfBirth: form.dateOfBirth.value,
+          country: form.country.value,
+          email: form.email.value,
+          isPep: form.isPep.checked
+        };
+
+        submitBtn.disabled = true;
+        try {
+          const res = await fetch('/api/customers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const body = await res.json().catch(function () { return {}; });
+
+          if (res.status === 201) {
+            customerId = body.id;
+            customerIdEl.textContent = 'Customer ID: ' + body.id;
+            result.hidden = false;
+          } else if (res.status === 400) {
+            showFieldErrors(body.errors);
+            if (!body.errors) formError.textContent = body.error || 'Invalid input.';
+          } else {
+            formError.textContent = body.error || ('Request failed (' + res.status + ').');
+          }
+        } catch (err) {
+          formError.textContent = 'Network error. Please try again.';
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      screenBtn.addEventListener('click', async function () {
+        if (customerId == null) return;
+        screenError.textContent = '';
+        screenBtn.disabled = true;
+        try {
+          const res = await fetch('/api/customers/' + encodeURIComponent(customerId) + '/screen', {
+            method: 'POST'
+          });
+          const body = await res.json().catch(function () { return {}; });
+
+          if (!res.ok) {
+            screenError.textContent = body.error || ('Screening failed (' + res.status + ').');
+            return;
+          }
+
+          badge.textContent = body.risk;
+          badge.dataset.risk = body.risk;
+          reasonsList.replaceChildren.apply(reasonsList, (body.reasons || []).map(function (reason) {
+            const li = document.createElement('li');
+            li.textContent = reason;
+            return li;
+          }));
+          screening.hidden = false;
+        } catch (err) {
+          screenError.textContent = 'Network error. Please try again.';
+        } finally {
+          screenBtn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
