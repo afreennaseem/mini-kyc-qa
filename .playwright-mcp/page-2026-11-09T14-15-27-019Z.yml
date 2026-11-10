@@ -1,0 +1,23 @@
+- main [ref=e2]:
+  - heading "Customer onboarding" [level=1] [ref=e3]
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Full name
+      - textbox "Full name" [invalid] [ref=e7]
+      - generic [ref=e21]: fullName is required
+    - generic [ref=e8]:
+      - generic [ref=e9]: Date of birth
+      - textbox "Date of birth" [invalid] [ref=e10]
+      - generic [ref=e22]: dateOfBirth is required
+    - generic [ref=e11]:
+      - generic [ref=e12]: Country (ISO-2, e.g. DK)
+      - textbox "Country (ISO-2, e.g. DK)" [invalid] [ref=e13]
+      - generic [ref=e23]: country is required
+    - generic [ref=e14]:
+      - generic [ref=e15]: Email
+      - textbox "Email" [invalid] [ref=e16]
+      - generic [ref=e24]: email is required
+    - generic [ref=e17]:
+      - checkbox "Politically exposed person" [ref=e18]
+      - generic [ref=e19]: Politically exposed person
+    - button "Submit" [ref=e20] [cursor=pointer]

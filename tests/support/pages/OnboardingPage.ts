@@ -27,7 +27,7 @@ export class OnboardingPage {
       email: page.getByLabel('Email'),
       isPep: page.getByLabel('Politically exposed person'),
     };
-    this.submitButton = page.getByRole('button', { name: 'Submit' });
+    this.submitButton = page.getByRole('button', { name: 'Send Application' });
     this.result = page.getByRole('region', { name: 'Result' });
     this.runScreeningButton = this.result.getByRole('button', { name: 'Run screening' });
   }

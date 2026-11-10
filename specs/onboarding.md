@@ -2,7 +2,7 @@
 
 ## Application Overview
 
-Test plan for the Customer onboarding page at http://localhost:3000/ (mini-kyc-qa). Form fields: Full name (text), Date of birth (date input), Country (ISO-2, e.g. DK; text, maxlength 3), Email (email input; form has novalidate so validation is done by the API), Politically exposed person (checkbox), and a Submit button. No required markers are shown. After a successful submit a Result section shows "Customer ID: N" and a "Run screening" button; clicking it shows "Risk:" with a badge (low/medium/high, rendered uppercase) and a list of reasons. The customer status (approved/review/rejected) is NOT displayed in the UI; it is only visible via GET /api/customers/:id. Each scenario starts from a fresh page load and uses a unique email. Exploration created customers 1-3 in the local DB using the emails qa+explore-*; the plan uses different emails, but reset test.db if a clean state is needed.
+Test plan for the Customer onboarding page at http://localhost:3000/ (mini-kyc-qa). Form fields: Full name (text), Date of birth (date input), Country (ISO-2, e.g. DK; text, maxlength 3), Email (email input; form has novalidate so validation is done by the API), Politically exposed person (checkbox), and a Send Application button. No required markers are shown. After a successful submit a Result section shows "Customer ID: N" and a "Run screening" button; clicking it shows "Risk:" with a badge (low/medium/high, rendered uppercase) and a list of reasons. The customer status (approved/review/rejected) is NOT displayed in the UI; it is only visible via GET /api/customers/:id. Each scenario starts from a fresh page load and uses a unique email. Exploration created customers 1-3 in the local DB using the emails qa+explore-*; the plan uses different emails, but reset test.db if a clean state is needed.
 
 ## Test Scenarios
 
@@ -19,7 +19,7 @@ Test plan for the Customer onboarding page at http://localhost:3000/ (mini-kyc-q
     - expect: Page title and heading are 'Customer onboarding'
   2. Fill Full name = 'Anna Smith'; Date of birth = '1990-05-15'; Country = 'DK'; Email = 'qa+ac01-happy@example.com'; leave 'Politically exposed person' unchecked
     - expect: No error text is shown
-  3. Click 'Submit'
+  3. Click 'Send Application'
     - expect: POST /api/customers returns 201 with status 'pending'
     - expect: A 'Result' section appears showing 'Customer ID: <n>' (observed 'Customer ID: 1')
     - expect: A 'Run screening' button is visible
@@ -35,7 +35,7 @@ Test plan for the Customer onboarding page at http://localhost:3000/ (mini-kyc-q
 **Steps:**
   1. Seed: tests/seed.spec.ts. Navigate to http://localhost:3000/ and leave every field empty (Email for this scenario: none entered)
     - expect: Form is blank
-  2. Click 'Submit'
+  2. Click 'Send Application'
     - expect: POST /api/customers returns 400
     - expect: Inline error under Full name: 'fullName is required'
     - expect: Inline error under Date of birth: 'dateOfBirth is required'
@@ -52,7 +52,7 @@ Test plan for the Customer onboarding page at http://localhost:3000/ (mini-kyc-q
     - expect: Form is blank
   2. Fill Full name = 'Anna Smith'; Date of birth = '1990-05-15'; Country = 'DK'; Email = 'anna@'
     - expect: No error yet (form is novalidate)
-  3. Click 'Submit'
+  3. Click 'Send Application'
     - expect: POST /api/customers returns 400 with an error for 'email'
     - expect: Inline error under Email: 'email must be a valid email address'
     - expect: No other field shows an error and no Customer ID is displayed. Observed: matches.
@@ -66,7 +66,7 @@ Test plan for the Customer onboarding page at http://localhost:3000/ (mini-kyc-q
     - expect: Form is blank
   2. Fill Full name = 'John Carter'; Date of birth = '1985-03-20'; Country = 'DK'; Email = 'qa+ac07-pep@example.com'; check 'Politically exposed person'
     - expect: Checkbox is checked
-  3. Click 'Submit' then click 'Run screening'
+  3. Click 'Send Application' then click 'Run screening'
     - expect: Customer ID is shown
     - expect: Risk badge shows 'medium' (displayed as MEDIUM)
     - expect: Reason shown: 'is_pep is true: customer is a politically exposed person'
@@ -81,7 +81,7 @@ Test plan for the Customer onboarding page at http://localhost:3000/ (mini-kyc-q
     - expect: Form is blank
   2. Fill Full name = 'Viktor Drago Malenkov'; Date of birth = '1975-11-02'; Country = 'DK'; Email = 'qa+ac09-sanctions@example.com'; leave PEP unchecked
     - expect: No error text is shown
-  3. Click 'Submit' then click 'Run screening'
+  3. Click 'Send Application' then click 'Run screening'
     - expect: Customer ID is shown
     - expect: Risk badge shows 'high' (displayed as HIGH)
     - expect: Reason shown: 'full_name "Viktor Drago Malenkov" matches the sanctions list'

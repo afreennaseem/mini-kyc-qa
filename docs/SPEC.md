@@ -33,7 +33,7 @@ Request body for POST /api/customers: `{ fullName, dateOfBirth (YYYY-MM-DD), cou
 ## UI (public/index.html)
 
 - Heading "Customer onboarding".
-- Form: full name, date of birth, country, email, PEP checkbox, "Submit" button.
+- Form: full name, date of birth, country, email, PEP checkbox, Send Application button.
 - Result panel showing the customer id and a "Run screening" button.
 - Risk badge (low/medium/high) and the list of reasons after screening.
 - Use proper `<label>` elements and button roles so Playwright role/label locators work.
