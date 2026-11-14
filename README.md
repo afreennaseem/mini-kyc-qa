@@ -148,6 +148,11 @@ The regression report locally with the bug reintroduced.
 
 ![Regression report with BUG-001 failures](docs/images/regression-red-local.png)
 
+The eval mutation check: critical case H3 (PEP in Iran) returns medium instead of high, and the critical-case
+assertion fails even though overall accuracy stays above 90%.
+
+![Eval H3 critical-case failure](docs/images/eval-h3-fail.png)
+
 The app after screening a sanctions-list name.
 
 ![Onboarding UI with a high-risk result](docs/images/ui-screening-high.png)
