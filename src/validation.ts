@@ -5,7 +5,9 @@ import { z } from 'zod';
  * ASCII-only name regex rejects international names such as "Søren Ægidius".
  * Intentionally left in place — fixed in Phase 6 with a regression test.
  */
-const NAME_PATTERN = /^[A-Za-z ]+$/;
+    // Any letter in any language, plus combining accents, spaces, hyphens and apostrophes.
+    // Must start with a letter. Fixes BUG-001.
+    const NAME_PATTERN = /^\p{L}[\p{L}\p{M} '’\-]*$/u;
 
 function isRealDate(value: string): boolean {
   const d = new Date(`${value}T00:00:00Z`);

@@ -38,9 +38,10 @@ Request body for POST /api/customers: `{ fullName, dateOfBirth (YYYY-MM-DD), cou
 - Risk badge (low/medium/high) and the list of reasons after screening.
 - Use proper `<label>` elements and button roles so Playwright role/label locators work.
 
-## Planted bug
+## Name validation
 
-Name validation uses `/^[A-Za-z ]+$/`, so "Søren Ægidius" is rejected. Fixed in Phase 6 with a regression test.
+Names may contain any Unicode letter, combining marks, spaces, hyphens and apostrophes, and must start with a letter.
+Previously only A–Z was allowed (BUG-001, fixed; see tests/regression/nordic-names.spec.ts).
 
 ## Folder structure
 

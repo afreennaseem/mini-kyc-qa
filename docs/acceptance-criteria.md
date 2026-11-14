@@ -64,7 +64,7 @@ And GET /api/customers/:id/screenings returns screenings newest first
 
 ## Data quality
 
-**AC-11 International names accepted** (known bug — fixed in Phase 6)
+**AC-11 International names accepted** (BUG-001, fixed; covered by tests/regression)
 Given a name with letters such as æ, ø, å, ö, a hyphen or an apostrophe (e.g. "Søren Ægidius", "Ana-Maria O'Neil")
 When the form is submitted
 Then the API returns 201

@@ -1,6 +1,6 @@
 # BUG-001: Names with Nordic letters, hyphens or apostrophes are rejected
 
-**Severity:** High · **Component:** API validation (`src/validation.ts`) · **Status:** Open
+**Severity:** High · **Component:** API validation (`src/validation.ts`) · **Status:** Fixed. NAME_PATTERN now allows any Unicode letter, combining marks, spaces, hyphens and apostrophes.
 
 ## Environment
 mini-kyc-qa, local, AGENT_MODE=mock
