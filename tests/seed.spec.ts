@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Test group', () => {
+test.describe('Seed', () => {
   test('seed', async ({ page }) => {
-    // generate code here.
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Customer onboarding' })).toBeVisible();
   });
 });
