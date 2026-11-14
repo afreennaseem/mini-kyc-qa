@@ -27,10 +27,34 @@ export function getAgentMode(): AgentMode {
   return process.env.AGENT_MODE === 'llm' ? 'llm' : 'mock';
 }
 
-export async function screenCustomer(customer: CustomerRow): Promise<ScreeningOutcome> {
+/** Unguarded view of one agent run, for evals. */
+export interface AgentRun {
+  mode: AgentMode;
+  /** The agent's output as returned, parsed against riskResultSchema, before the grounding guard. */
+  raw: RiskResult;
+  /** The model's final text reply, verbatim. Always null in mock mode. */
+  rawText: string | null;
+  /** True when raw.sanctionsHit is true but checkSanctions never matched. Always false in mock mode. */
+  guardTriggered: boolean;
+}
+
+export const GUARD_ERROR_MESSAGE = 'Agent reported sanctionsHit=true without a tool match';
+
+/**
+ * Runs the agent and reports the grounding guard instead of enforcing it.
+ * Still throws for refusals, unparseable replies and turn-limit overruns.
+ */
+export async function runAgent(customer: CustomerRow): Promise<AgentRun> {
   const mode = getAgentMode();
-  const result = mode === 'llm' ? await runLlm(customer) : runMock(customer);
-  return { ...result, mode };
+  if (mode === 'llm') return { mode, ...(await runLlm(customer)) };
+  return { mode, raw: runMock(customer), rawText: null, guardTriggered: false };
+}
+
+/** Guarded result used by the server: throws if the grounding guard triggers. */
+export async function screenCustomer(customer: CustomerRow): Promise<ScreeningOutcome> {
+  const run = await runAgent(customer);
+  if (run.guardTriggered) throw new Error(GUARD_ERROR_MESSAGE);
+  return { ...run.raw, mode: run.mode };
 }
 
 // ---------------------------------------------------------------------------
@@ -46,14 +70,18 @@ export function runMock(customer: CustomerRow): RiskResult {
     risk = 'high';
     reasons.push(`full_name "${customer.full_name}" matches the sanctions list`);
   }
+
+  
   if ((HIGH_RISK_COUNTRIES as readonly string[]).includes(customer.country)) {
     risk = 'high';
     reasons.push(`country ${customer.country} is a high-risk jurisdiction`);
   }
-  if (customer.is_pep === 1) {
+
+    if (customer.is_pep === 1) {
     if (risk === 'low') risk = 'medium';
     reasons.push('is_pep is true: customer is a politically exposed person');
   }
+
   if (reasons.length === 0) {
     reasons.push(
       `full_name not on sanctions list, country ${customer.country} not high-risk, is_pep is false`,
@@ -112,7 +140,7 @@ function extractJson(text: string): unknown {
   return JSON.parse(trimmed.slice(start, end + 1));
 }
 
-async function runLlm(customer: CustomerRow): Promise<RiskResult> {
+async function runLlm(customer: CustomerRow): Promise<Omit<AgentRun, 'mode'>> {
   const client = new Anthropic();
   const model = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
 
@@ -178,13 +206,12 @@ async function runLlm(customer: CustomerRow): Promise<RiskResult> {
       .filter((b): b is Anthropic.TextBlock => b.type === 'text')
       .map((b) => b.text)
       .join('');
-    const result = riskResultSchema.parse(extractJson(text));
+    const raw = riskResultSchema.parse(extractJson(text));
 
     // Grounding guard: sanctionsHit may only be true if the tool actually matched.
-    if (result.sanctionsHit && !toolMatched) {
-      throw new Error('Agent reported sanctionsHit=true without a tool match');
-    }
-    return result;
+    // Reported here; enforced by screenCustomer.
+    const guardTriggered = raw.sanctionsHit && !toolMatched;
+    return { raw, rawText: text, guardTriggered };
   }
 
   throw new Error(`Risk agent did not produce a final answer within ${MAX_TURNS} turns`);

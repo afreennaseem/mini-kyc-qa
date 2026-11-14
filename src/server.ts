@@ -2,7 +2,7 @@ import 'dotenv/config';
 import path from 'node:path';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import {
-  DB_FILE,
+  getDbFile,
   getCustomer,
   insertCustomer,
   insertScreening,
@@ -132,5 +132,5 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`mini-kyc-qa listening on http://localhost:${PORT} (AGENT_MODE=${getAgentMode()}, DB_FILE=${DB_FILE})`);
+  console.log(`mini-kyc-qa listening on http://localhost:${PORT} (AGENT_MODE=${getAgentMode()}, DB_FILE=${getDbFile()})`);
 });

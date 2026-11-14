@@ -39,14 +39,32 @@ export const SANCTIONS_SEED: ReadonlyArray<{ fullName: string; country: string }
   { fullName: 'Lucia Moreno Castellan', country: 'VE' },
 ];
 
-export const DB_FILE = process.env.DB_FILE || 'kyc.db';
+/**
+ * The connection is opened lazily, on first use, from DB_FILE as it is at that
+ * moment (default kyc.db). Importing this module opens nothing, so a process
+ * (e.g. an eval worker) can point DB_FILE at its own file before the first query.
+ */
+let connection: Database.Database | undefined;
+let connectionFile: string | undefined;
 
-export const db: Database.Database = new Database(DB_FILE);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+/** The file the connection uses, or will use if it is not open yet. */
+export function getDbFile(): string {
+  return connectionFile ?? (process.env.DB_FILE || 'kyc.db');
+}
+
+function getDb(): Database.Database {
+  if (!connection) {
+    connectionFile = getDbFile();
+    connection = new Database(connectionFile);
+    connection.pragma('journal_mode = WAL');
+    connection.pragma('foreign_keys = ON');
+  }
+  return connection;
+}
 
 /** Drops and recreates the schema, then seeds the sanctions list. */
 export function resetDatabase(): void {
+  const db = getDb();
   db.exec(`
     DROP TABLE IF EXISTS screenings;
     DROP TABLE IF EXISTS customers;
@@ -94,7 +112,7 @@ export function insertCustomer(c: {
   email: string;
   isPep: boolean;
 }): number {
-  const result = db
+  const result = getDb()
     .prepare(
       `INSERT INTO customers (full_name, date_of_birth, country, email, is_pep)
        VALUES (?, ?, ?, ?, ?)`,
@@ -104,11 +122,11 @@ export function insertCustomer(c: {
 }
 
 export function getCustomer(id: number): CustomerRow | undefined {
-  return db.prepare('SELECT * FROM customers WHERE id = ?').get(id) as CustomerRow | undefined;
+  return getDb().prepare('SELECT * FROM customers WHERE id = ?').get(id) as CustomerRow | undefined;
 }
 
 export function setCustomerStatus(id: number, status: CustomerStatus): void {
-  db.prepare('UPDATE customers SET status = ? WHERE id = ?').run(status, id);
+  getDb().prepare('UPDATE customers SET status = ? WHERE id = ?').run(status, id);
 }
 
 export function insertScreening(s: {
@@ -118,7 +136,7 @@ export function insertScreening(s: {
   sanctionsHit: boolean;
   mode: string;
 }): number {
-  const result = db
+  const result = getDb()
     .prepare(
       `INSERT INTO screenings (customer_id, risk, reasons, sanctions_hit, mode)
        VALUES (?, ?, ?, ?, ?)`,
@@ -128,7 +146,7 @@ export function insertScreening(s: {
 }
 
 export function listScreenings(customerId: number): ScreeningRow[] {
-  return db
+  return getDb()
     .prepare('SELECT * FROM screenings WHERE customer_id = ? ORDER BY created_at DESC, id DESC')
     .all(customerId) as ScreeningRow[];
 }
@@ -136,7 +154,7 @@ export function listScreenings(customerId: number): ScreeningRow[] {
 /** Case- and whitespace-insensitive exact name match. */
 export function findSanctionsMatches(fullName: string): SanctionsRow[] {
   const normalized = fullName.trim().replace(/\s+/g, ' ').toLowerCase();
-  return db
+  return getDb()
     .prepare('SELECT * FROM sanctions_list WHERE lower(full_name) = ?')
     .all(normalized) as SanctionsRow[];
 }

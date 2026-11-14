@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -32,8 +33,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     {
+      // Creates and seeds evals.db (see evals/support/evalDb.ts).
+      name: 'evals-setup',
+      testDir: './evals',
+      testMatch: 'evals.setup.ts',
+    },
+    {
       name: 'evals',
       testDir: './evals',
+      testIgnore: 'evals.setup.ts',
+      dependencies: ['evals-setup'],
+      // The spec runs the agent once in beforeAll and shares outputs across tests.
+      fullyParallel: false,
     },
   ],
 

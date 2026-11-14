@@ -11,3 +11,8 @@ node_modules/
 # Secrets and local data
 .env
 *.db
+*.db-shm
+*.db-wal
+
+# Eval run output
+evals/results.json
