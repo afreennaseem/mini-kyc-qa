@@ -7,7 +7,7 @@ import { z } from 'zod';
  */
     // Any letter in any language, plus combining accents, spaces, hyphens and apostrophes.
     // Must start with a letter. Fixes BUG-001.
-    const NAME_PATTERN = /^\p{L}[\p{L}\p{M} '’\-]*$/u;
+    const NAME_PATTERN = /^[A-Za-z ]+$/;
 
 function isRealDate(value: string): boolean {
   const d = new Date(`${value}T00:00:00Z`);
