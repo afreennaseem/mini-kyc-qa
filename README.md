@@ -134,19 +134,23 @@ bug would have merged.
 
 CI on `main`: typecheck, then the four-layer matrix; `llm-evals` skipped.
 
-![CI green on main](docs/images/Screenshot%202026-11-14%20at%2018.49.24.png)
+![CI green on main](docs/images/ci-green.png)
 
 The BUG-001 demo PR: only the regression check fails.
 
-![CI red on the demo PR](docs/images/Screenshot%202026-11-14%20at%2018.33.49.png)
+![Regression check failing on the demo PR](docs/images/ci-pr-red.png)
+
+Failed runs in Actions: both BUG-001 demo PRs, under the old Playwright workflow and the new CI.
+
+![Failed demo runs in GitHub Actions](docs/images/ci-failed-runs.png)
 
 The regression report locally with the bug reintroduced.
 
-![Regression report with BUG-001 failures](docs/images/Screenshot%202026-11-14%20at%2015.29.33.png)
+![Regression report with BUG-001 failures](docs/images/regression-red-local.png)
 
 The app after screening a sanctions-list name.
 
-![Onboarding UI with a high-risk result](docs/images/Screenshot%202026-11-14%20at%2018.55.19.png)
+![Onboarding UI with a high-risk result](docs/images/ui-screening-high.png)
 
 ## Limitations and next steps
 
